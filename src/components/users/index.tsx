@@ -4,7 +4,12 @@ import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { formatSU } from '../../util/formatting/formatSU';
+
 const userFilters = [
+    <TextInput source="id" label="Username Search" alwaysOn resettable InputProps={{
+        endAdornment: <InputAdornment position="end"><IconButton><SearchIcon/></IconButton></InputAdornment>,
+    }}/>,
     <TextInput source="pw_name" label="User Search" alwaysOn resettable InputProps={{
         endAdornment: <InputAdornment position="end"><IconButton><SearchIcon/></IconButton></InputAdornment>,
       }}/>,
@@ -44,7 +49,7 @@ function ComputeUsage() {
         return sum;
     }, 0.0);
 
-    return <Typography component="span" variant="body2" textAlign="right">{Math.round(compute_usage*100)/100} SU</Typography>;
+    return <Typography component="span" variant="body2" textAlign="right">{formatSU(compute_usage)}</Typography>;
 
 }
 

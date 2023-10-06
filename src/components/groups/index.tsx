@@ -4,8 +4,8 @@ import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 
-const userFilters = [
-    <TextInput source="pw_name" label="User Search" alwaysOn resettable InputProps={{
+const groupFilters = [
+    <TextInput source="id" label="Group Search" alwaysOn resettable InputProps={{
         endAdornment: <InputAdornment position="end"><IconButton><SearchIcon/></IconButton></InputAdornment>,
       }}/>,
 ];
@@ -46,14 +46,14 @@ function ComputeUsage() {
         return sum;
     }, 0.0);
 
-    return <Typography component="span" variant="body2" textAlign="right">{Math.round(compute_usage*100)/100} SU</Typography>;
+    return <Typography component="span" variant="body2" textAlign="right">{compute_usage.toFixed(2)} SU</Typography>;
 
 }
 
 export const GroupList = () => {
 
     return (
-    <List filters={userFilters}>
+    <List filters={groupFilters}>
         <Datagrid rowClick="show" bulkActionButtons={false}>
             <TextField source="id" label="Group Name"/>
             <TextField source="gid" label="gid"/>
