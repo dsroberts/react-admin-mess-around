@@ -6,6 +6,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 import { formatSU } from '../../util/formatting/formatSU';
 
+import React from 'react';
+
 const userFilters = [
     <TextInput source="id" label="Username Search" alwaysOn resettable InputProps={{
         endAdornment: <InputAdornment position="end"><IconButton><SearchIcon/></IconButton></InputAdornment>,

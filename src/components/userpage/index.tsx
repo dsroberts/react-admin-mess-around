@@ -1,8 +1,7 @@
 import { Show, SimpleShowLayout, TextField, useRecordContext, TopToolbar, PrevNextButtons, ReferenceManyField, Datagrid, FunctionField, useListContext, Button, WithListContext} from 'react-admin';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 
-import Typography from '@mui/material/Typography';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';

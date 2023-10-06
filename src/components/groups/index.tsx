@@ -4,6 +4,10 @@ import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { formatSU } from '../../util/formatting/formatSU';
+
+import React from 'react';
+
 const groupFilters = [
     <TextInput source="id" label="Group Search" alwaysOn resettable InputProps={{
         endAdornment: <InputAdornment position="end"><IconButton><SearchIcon/></IconButton></InputAdornment>,
@@ -46,7 +50,7 @@ function ComputeUsage() {
         return sum;
     }, 0.0);
 
-    return <Typography component="span" variant="body2" textAlign="right">{compute_usage.toFixed(2)} SU</Typography>;
+    return <Typography component="span" variant="body2" textAlign="right">{formatSU(compute_usage)}</Typography>;
 
 }
 
