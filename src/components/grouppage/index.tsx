@@ -29,10 +29,8 @@ import { formatStorage } from "../../util/formatting/formatStorage";
 import { groupQuotaProjects } from "../../util/data/groups";
 import { MakeComputeGraphProj, DateFilterContext } from "../../util/plotting/computePlot";
 import {
-  LinkToUser,
-  LinkToGroupScratch,
-  LinkToGroupGdata,
-  LinkToGroup,
+  LinkToUserWithPrefix,
+  LinkToGroupWithPrefix
 } from "../../util/linking";
 
 const PostTitle = () => {
@@ -129,7 +127,7 @@ export const GroupPage = () => {
             <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
               <FunctionField
                 label="User"
-                render={LinkToUser}
+                render={(record) => LinkToUserWithPrefix(record.user)}
                 sortBy="user"
                 source="user"
               />
@@ -144,7 +142,7 @@ export const GroupPage = () => {
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/scratch" path="scratch">
           <ReferenceManyField
-            label="/scratch usage across all projects"
+            label="/scratch usage by user"
             target="location"
             reference="storage_latest"
             sort={{ field: "size", order: "DESC" }}
@@ -154,19 +152,19 @@ export const GroupPage = () => {
             <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
               <FunctionField
                 label="User"
-                render={LinkToUser}
+                render={(record) => LinkToUserWithPrefix(record.user)}
                 sortBy="user"
                 source="user"
               />
               <FunctionField
                 label="Directory"
-                render={LinkToGroupScratch}
+                render={(record) => LinkToGroupWithPrefix(record.location,"/scratch","scratch")}
                 sortBy="location"
                 source="location"
               />
               <FunctionField
                 label="Group Ownership"
-                render={LinkToGroup}
+                render={(record) => LinkToGroupWithPrefix(record.ownership)}
                 sortBy="ownership"
                 source="ownership"
               />
@@ -187,7 +185,7 @@ export const GroupPage = () => {
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/g/data" path="gdata">
           <ReferenceManyField
-            label="/g/data usage across all projects"
+            label="/g/data usage by user"
             target={quotaField()}
             reference="storage_latest"
             sort={{ field: "size", order: "DESC" }}
@@ -197,19 +195,19 @@ export const GroupPage = () => {
             <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
               <FunctionField
                 label="User"
-                render={LinkToUser}
+                render={(record) => LinkToUserWithPrefix(record.user)}
                 sortBy="user"
                 source="user"
               />
               <FunctionField
                 label="Directory"
-                render={LinkToGroupGdata}
+                render={(record) => LinkToGroupWithPrefix(record.location,"/g/data","gdata")}
                 sortBy="location"
                 source="location"
               />
               <FunctionField
                 label="Group Ownership"
-                render={LinkToGroup}
+                render={(record) => LinkToGroupWithPrefix(record.ownership)}
                 sortBy="ownership"
                 source="ownership"
               />
@@ -229,7 +227,39 @@ export const GroupPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="massdata" path="massdata">
-          <div>Nothing yet</div>
+          <ReferenceManyField
+            label="massdata usage"
+            target="location"
+            reference="storage_latest"
+            sort={{ field: "size", order: "DESC" }}
+            filter={{ fs: "massdata" }}
+            perPage={9999}
+            >
+              <Datagrid bulkActionButtons={false}>
+              <TextField
+                label=""
+                sortBy="user"
+                source="user"
+              />
+              <TextField
+                label="Project"
+                sortBy="location"
+                source="location"
+              />
+              <FunctionField
+                label="Data Usage"
+                render={(record) => `${formatStorage(record.size)}`}
+                sortBy="size"
+                source="size"
+              />
+              <FunctionField
+                label="# Files"
+                render={(record) => `${record.inodes.toLocaleString()}`}
+                sortBy="inodes"
+                source="inodes"
+              />
+              </Datagrid>
+            </ReferenceManyField>
         </TabbedShowLayout.Tab>
       </TabbedShowLayout>
       </DateFilterContext.Provider>

@@ -19,7 +19,7 @@ import "dayjs/locale/en-au";
 
 const DateFilterContext = React.createContext(null)
 
-function PreparePlotData(prop, inData) {
+function PreparePlotData(prop, inData, missingaction="zero", missingtslookahead=6) {
 
   const { fromDate, toDate } = useContext(DateFilterContext);
 
@@ -43,40 +43,47 @@ function PreparePlotData(prop, inData) {
       proplist.push(x[prop]);
     }
   });
-  // Fill in gaps for known timestamps
-
-  for ( const key in data2 ) {
-    proplist.forEach((proj) => {
-      if (!(proj in data2[key])) {
-        data2[key][proj] = 0.0
-      }
-    })
-  }
 
   proplist.sort((a, b) => usageSum[b] - usageSum[a]);
 
+  // Now fill gaps where we've missed all timestamps
+  let currentDate = fromDate.unix();
+  while ( currentDate < toDate.unix()){
+    const existsInRange = allts.some((timestamp) => {
+      return timestamp > currentDate && timestamp < (currentDate + (missingtslookahead*2)*3600)
+    })
+    if ( !existsInRange ) {
+      allts.push(currentDate)
+      data2[currentDate] = {};
+    }
+    currentDate = currentDate + missingtslookahead*3600;
+  }
+
+  allts.sort();
+
+  // Now fill in the missing data
+  allts.forEach( ( key, index ) => {
+    proplist.forEach((proj) => {
+      if (!(proj in data2[key])) {
+        if (missingaction == "zero" ) {
+          data2[key][proj] = 0.0
+        } else if (missingaction == "prev") {
+          if ( index > 0 ) {
+            data2[key][proj] = data2[allts[index-1]][proj]
+          } else {
+            data2[key][proj] = 0.0
+          }
+        }
+      }
+    })
+  })
+  
   var dataArray = [];
   for (const [key, value] of Object.entries(data2)) {
     let tmpobj = { ts: parseInt(key) };
     let newobj = { ...value, ...tmpobj };
 
     dataArray.push(newobj);
-  }
-
-  // Now fill gaps where we've missed all timestamps
-  let currentDate = fromDate.unix();
-  while ( currentDate < toDate.unix()){
-    const existsInRange = allts.some((timestamp) => {
-      return timestamp > currentDate && timestamp < (currentDate + 12*3600)
-    })
-    if ( !existsInRange ) {
-      var tmpobj = {}
-      proplist.forEach((proj) => {
-        tmpobj[proj] = 0.0
-      } )
-      dataArray.push({...tmpobj, ts:currentDate})
-    } 
-    currentDate = currentDate + 6*3600;
   }
 
   dataArray.sort((a,b) => a.ts - b.ts)
@@ -88,14 +95,14 @@ function MakeComputeGraphUser() {
     const listContext = useListContext();
     if (listContext.isLoading) return null;
     const { fromDate, toDate } = useContext(DateFilterContext);
-    const { dataArray, proplist: projectlist } = PreparePlotData('project',listContext.data)
+    const { dataArray, proplist: projectlist } = PreparePlotData('project',listContext.data,"zero",6)
 
     return (
       <ResponsiveContainer width="100%" height={400}>
         <AreaChart data={dataArray}>
           <XAxis dataKey="ts" type='number' tickFormatter={(x) => dayjs.unix(x).format('YYYY-MM-DD')} domain={[fromDate.unix(),toDate.unix()]}/>
           <YAxis type="number" tickFormatter={formatSUint} />
-          <Tooltip />
+          <Tooltip label="thing"/>
           <Legend />
           <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
           {projectlist.map((project, index) => {
@@ -119,14 +126,14 @@ function MakeComputeGraphProj() {
   const { fromDate, toDate } = useContext(DateFilterContext);
   const listContext = useListContext();
   if (listContext.isLoading) return null;
-  const { dataArray, proplist: userlist } = PreparePlotData('user',listContext.data)
+  const { dataArray, proplist: userlist } = PreparePlotData('user',listContext.data,"zero",6)
 
   return (
     <ResponsiveContainer width="100%" height={400}>
       <AreaChart data={dataArray}>
         <XAxis dataKey="ts" type='number' tickFormatter={(x) => dayjs.unix(x).format('YYYY-MM-DD')} domain={[fromDate.unix(),toDate.unix()]}/>
         <YAxis type="number" tickFormatter={formatSUint} />
-        <Tooltip />
+        <Tooltip label={(x) => dayjs.unix(x).format('YYYY-MM-DD HH:mm:ss')}/>
         <Legend />
         <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
         {userlist.map((user, index) => {

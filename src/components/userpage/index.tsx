@@ -28,12 +28,7 @@ import { formatSU } from "../../util/formatting/formatSU";
 import Chip from "@mui/material/Chip";
 import { formatStorage } from "../../util/formatting/formatStorage";
 import { MakeComputeGraphUser, DateFilterContext } from "../../util/plotting/computePlot";
-import {
-  LinkToGroup,
-  LinkToGroupGdata,
-  LinkToGroupScratch,
-} from "../../util/linking";
-
+import { LinkToGroupWithPrefix } from "../../util/linking";
 
 const PostTitle = () => {
   const record = useRecordContext();
@@ -52,6 +47,7 @@ const TagsField = () => {
     <div>
       {record.groups.map((item) => (
         <Chip
+          key={item}
           label={item}
           component="a"
           href={`#/groups/${item}/show`}
@@ -143,7 +139,8 @@ export const UserPage = () => {
             <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
               <FunctionField
                 label="Project"
-                render={LinkToGroup}
+                //render={LinkToGroup}
+                render={(record) => LinkToGroupWithPrefix(record.project)}
                 sortBy="project"
                 source="project"
               />
@@ -167,13 +164,13 @@ export const UserPage = () => {
             <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
               <FunctionField
                 label="Directory"
-                render={LinkToGroupScratch}
+                render={(record) => LinkToGroupWithPrefix(record.location,"/scratch","scratch")}
                 sortBy="location"
                 source="location"
               />
               <FunctionField
                 label="Group Ownership"
-                render={LinkToGroup}
+                render={(record) => LinkToGroupWithPrefix(record.ownership)}
                 sortBy="ownership"
                 source="ownership"
               />
@@ -203,13 +200,13 @@ export const UserPage = () => {
             <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
               <FunctionField
                 label="Directory"
-                render={LinkToGroupGdata}
+                render={(record) => LinkToGroupWithPrefix(record.location,"/g/data","gdata")}
                 sortBy="location"
                 source="location"
               />
               <FunctionField
                 label="Group Ownership"
-                render={LinkToGroup}
+                render={(record) => LinkToGroupWithPrefix(record.ownership)}
                 sortBy="ownership"
                 source="ownership"
               />
