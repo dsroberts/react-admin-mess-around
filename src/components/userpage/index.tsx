@@ -194,7 +194,7 @@ export const UserPage = () => {
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/g/data" path="gdata">
           <ReferenceManyField
-            label="/scratch usage across all projects"
+            label="/g/data usage across all projects"
             target="user"
             reference="storage_latest"
             sort={{ field: "size", order: "DESC" }}
