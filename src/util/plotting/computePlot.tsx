@@ -16,35 +16,49 @@ import { colourPicker } from "../formatting/colourPicker";
 
 import dayjs from "dayjs";
 import "dayjs/locale/en-au";
+import { formatStorage } from '../formatting/formatStorage';
 
 const DateFilterContext = React.createContext(null)
 
-function PreparePlotData(prop, inData, missingaction="zero", missingtslookahead=6) {
+function PreparePlotData(searchProp, dataProp, inData, missingaction="zero", missingtslookahead=6) {
 
   const { fromDate, toDate } = useContext(DateFilterContext);
 
-  var data2: { [key: number]: number; } = {};
-  var usageSum = {};
+  var data2: { [key: number]: object; } = {};
+  var usageSum: { [key: number]: number; } = {};
   var proplist: string[] = [];
-  var allts = []
+  var allts: number[] = []
+  var firstRealTimestampForProp = {}
+
   inData.forEach((x) => {
     let ts = dayjs(x.ts).unix()
     allts.push(ts);
     if (!(ts in data2)) {
       data2[ts] = {};
     }
-    if (!(x.project in usageSum)) {
-      usageSum[x[prop]] = x.usage;
+    if (!(x[searchProp] in usageSum)) {
+      usageSum[x[searchProp]] = x[dataProp];
     } else {
-      usageSum[x[prop]] += x.usage;
+      usageSum[x[searchProp]] += x[dataProp];
     }
-    data2[ts][x[prop]] = x.usage;
-    if (!proplist.includes(x[prop])) {
-      proplist.push(x[prop]);
+    if (!(x[searchProp] in data2[ts])) {
+      data2[ts][x[searchProp]] = x[dataProp];
+    } else {
+      data2[ts][x[searchProp]] += x[dataProp];
     }
-  });
+    if (!proplist.includes(x[searchProp])) {
+      proplist.push(x[searchProp]);
+    }
+    if ( missingaction === "prev" ) {
+      if (!(x[searchProp] in firstRealTimestampForProp) ) {
+        firstRealTimestampForProp[x[searchProp]] = ts;
+      }
+    }
+  })
 
   proplist.sort((a, b) => usageSum[b] - usageSum[a]);
+  // Enforce a hard-limit of 20 'props' here
+  proplist = proplist.slice(0,30);
 
   // Now fill gaps where we've missed all timestamps
   let currentDate = fromDate.unix();
@@ -69,9 +83,10 @@ function PreparePlotData(prop, inData, missingaction="zero", missingtslookahead=
           data2[key][proj] = 0.0
         } else if (missingaction == "prev") {
           if ( index > 0 ) {
-            data2[key][proj] = data2[allts[index-1]][proj]
+            data2[key][proj] = data2[allts[index-1]][proj];
           } else {
-            data2[key][proj] = 0.0
+            // For the 0-th index, grab the first real bit of data we have
+            data2[key][proj] = data2[firstRealTimestampForProp[proj]][proj];
           }
         }
       }
@@ -95,14 +110,14 @@ function MakeComputeGraphUser() {
     const listContext = useListContext();
     if (listContext.isLoading) return null;
     const { fromDate, toDate } = useContext(DateFilterContext);
-    const { dataArray, proplist: projectlist } = PreparePlotData('project',listContext.data,"zero",6)
+    const { dataArray, proplist: projectlist } = PreparePlotData('project','usage',listContext.data,"zero",6)
 
     return (
       <ResponsiveContainer width="100%" height={400}>
         <AreaChart data={dataArray}>
           <XAxis dataKey="ts" type='number' tickFormatter={(x) => dayjs.unix(x).format('YYYY-MM-DD')} domain={[fromDate.unix(),toDate.unix()]}/>
           <YAxis type="number" tickFormatter={formatSUint} />
-          <Tooltip label="thing"/>
+          <Tooltip />
           <Legend />
           <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
           {projectlist.map((project, index) => {
@@ -126,7 +141,7 @@ function MakeComputeGraphProj() {
   const { fromDate, toDate } = useContext(DateFilterContext);
   const listContext = useListContext();
   if (listContext.isLoading) return null;
-  const { dataArray, proplist: userlist } = PreparePlotData('user',listContext.data,"zero",6)
+  const { dataArray, proplist: userlist } = PreparePlotData('user','usage',listContext.data,"zero",6)
 
   return (
     <ResponsiveContainer width="100%" height={400}>
@@ -162,4 +177,76 @@ function MakeComputeGraphProj() {
   );
 }
 
-export { DateFilterContext, MakeComputeGraphUser, MakeComputeGraphProj };
+function MakeStorageGraphUser() {
+
+  const listContext = useListContext();
+  if (listContext.isLoading) return null;
+  const { fromDate, toDate } = useContext(DateFilterContext);
+  const { dataArray, proplist: projectlist } = PreparePlotData('location','size',listContext.data,"prev",6)
+
+  return (
+    <ResponsiveContainer width="100%" height={400}>
+      <AreaChart data={dataArray}>
+        <XAxis dataKey="ts" type='number' tickFormatter={(x) => dayjs.unix(x).format('YYYY-MM-DD')} domain={[fromDate.unix(),toDate.unix()]}/>
+        <YAxis type="number" tickFormatter={formatStorage} />
+        <Tooltip />
+        <Legend />
+        <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+        {projectlist.map((project, index) => {
+          return (
+            <Area
+              dataKey={project}
+              type="monotone"
+              stroke={colourPicker(index)}
+              fill={colourPicker(index)}
+              stackId="1"
+            />
+          );
+        })}
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+function MakeStorageGraphProj() {
+
+const { fromDate, toDate } = useContext(DateFilterContext);
+const listContext = useListContext();
+if (listContext.isLoading) return null;
+const { dataArray, proplist: userlist } = PreparePlotData('user','size',listContext.data,"prev",6)
+
+return (
+  <ResponsiveContainer width="100%" height={400}>
+    <AreaChart data={dataArray}>
+      <XAxis dataKey="ts" type='number' tickFormatter={(x) => dayjs.unix(x).format('YYYY-MM-DD')} domain={[fromDate.unix(),toDate.unix()]}/>
+      <YAxis type="number" tickFormatter={formatStorage} />
+      <Tooltip label={(x) => dayjs.unix(x).format('YYYY-MM-DD HH:mm:ss')}/>
+      <Legend />
+      <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+      {userlist.map((user, index) => {
+        let stackId = "1";
+        let opacity = 1;
+        if (user == "total") {
+          stackId = "2";
+          opacity = 0;
+        } else if (user == "grant") {
+          stackId = "3";
+          opacity = 0;
+        }
+        return (
+          <Area
+            dataKey={user}
+            type="monotone"
+            stroke={colourPicker(index)}
+            fill={colourPicker(index)}
+            fillOpacity={opacity}
+            stackId={stackId}
+          />
+        );
+      })}
+    </AreaChart>
+  </ResponsiveContainer>
+);
+}
+
+export { DateFilterContext, MakeComputeGraphUser, MakeComputeGraphProj, MakeStorageGraphUser, MakeStorageGraphProj };

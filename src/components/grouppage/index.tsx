@@ -27,7 +27,8 @@ import "dayjs/locale/en-au";
 import { formatSU } from "../../util/formatting/formatSU";
 import { formatStorage } from "../../util/formatting/formatStorage";
 import { groupQuotaProjects } from "../../util/data/groups";
-import { MakeComputeGraphProj, DateFilterContext } from "../../util/plotting/computePlot";
+import { StorageNote } from "../../util/data/storagenote";
+import { MakeComputeGraphProj, MakeStorageGraphProj, DateFilterContext } from "../../util/plotting/computePlot";
 import {
   LinkToUserWithPrefix,
   LinkToGroupWithPrefix
@@ -56,8 +57,13 @@ export const GroupPage = () => {
   const datefilter = fromDate && toDate ? {ts: [fromDate.toISOString(), toDate.toISOString()] } : {};
 
   const PostBulkActionButtons = () => {
-    const { selectedIds } = useListContext();
-    const newUserList = selectedIds.map((k) => k.split("_")[1]);
+    const { resource, selectedIds } = useListContext();
+    var newUserList = [];
+    if ( resource === "storage_latest" ) {
+      newUserList = selectedIds.map((k) => k.split("_")[2]);
+    } else if ( resource === "compute_latest" ) {
+      newUserList = selectedIds.map((k) => k.split("_")[1]);
+    }
 
     const handleFilterButtonClick = () => {
       setUserList(newUserList);
@@ -142,6 +148,17 @@ export const GroupPage = () => {
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/scratch" path="scratch">
           <ReferenceManyField
+            label="/scratch usage over time"
+            target="location"
+            reference="storage"
+            sort={{ field: "ts", order: "ASC" }}
+            filter={{ fs:"scratch", ...totalFilter }}
+            perPage={99999}
+          >
+          <WithListContext render={MakeStorageGraphProj} />
+          </ReferenceManyField>
+          <StorageNote />
+          <ReferenceManyField
             label="/scratch usage by user"
             target="location"
             reference="storage_latest"
@@ -184,6 +201,17 @@ export const GroupPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/g/data" path="gdata">
+        <ReferenceManyField
+            label="/g/data usage over time"
+            target={quotaField()}
+            reference="storage"
+            sort={{ field: "ts", order: "ASC" }}
+            filter={{ fs:"gdata", ...totalFilter }}
+            perPage={99999}
+          >
+          <WithListContext render={MakeStorageGraphProj} />
+          <StorageNote />
+          </ReferenceManyField>
           <ReferenceManyField
             label="/g/data usage by user"
             target={quotaField()}
@@ -227,6 +255,16 @@ export const GroupPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="massdata" path="massdata">
+        <ReferenceManyField
+            label="massdata usage over time"
+            target="location"
+            reference="storage"
+            sort={{ field: "ts", order: "ASC" }}
+            filter={{ fs:"massdata", ...totalFilter }}
+            perPage={99999}
+          >
+          <WithListContext render={MakeStorageGraphProj} />
+          </ReferenceManyField>
           <ReferenceManyField
             label="massdata usage"
             target="location"

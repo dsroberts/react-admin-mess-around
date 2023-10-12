@@ -12,6 +12,7 @@ import {
   WithListContext,
   TabbedShowLayout,
   SimpleShowLayout,
+  SelectInput,
 } from "react-admin";
 
 import React, { useState } from "react";
@@ -27,7 +28,7 @@ import { formatSU } from "../../util/formatting/formatSU";
 
 import Chip from "@mui/material/Chip";
 import { formatStorage } from "../../util/formatting/formatStorage";
-import { MakeComputeGraphUser, DateFilterContext } from "../../util/plotting/computePlot";
+import { MakeComputeGraphUser, MakeStorageGraphUser, DateFilterContext } from "../../util/plotting/computePlot";
 import { LinkToGroupWithPrefix } from "../../util/linking";
 
 const PostTitle = () => {
@@ -66,8 +67,13 @@ export const UserPage = () => {
   const datefilter = fromDate && toDate ? { ts: [fromDate.toISOString(), toDate.toISOString()] } : {};
 
   const PostBulkActionButtons = () => {
-    const { selectedIds } = useListContext();
-    const newProjectList = selectedIds.map((k) => k.split("_")[2]);
+    const { resource, selectedIds } = useListContext();
+    var newProjectList = [];
+    if ( resource === "compute_latest" ) {
+      newProjectList = selectedIds.map((k) => k.split("_")[2]);
+    } else if ( resource === "storage_latest" ) {
+      newProjectList = selectedIds.map((k) => k.split("_")[3])
+    }
 
     const handleFilterButtonClick = () => {
       setProjectList(newProjectList);
@@ -87,7 +93,9 @@ export const UserPage = () => {
 
   
   const projectFilter = projects.length != 0 ? { project: projects } : {};
-  const totalFilter = { ...projectFilter, ...datefilter };
+  const locationFilter = projects.length != 0 ? { location: projects } : {};
+  const computeFilter = { ...projectFilter, ...datefilter };
+  const storageFilter = { ...locationFilter, ...datefilter };
 
   return (
     <Show
@@ -125,7 +133,7 @@ export const UserPage = () => {
             target="user"
             reference="compute"
             sort={{ field: "ts", order: "ASC" }}
-            filter={totalFilter}
+            filter={computeFilter}
             perPage={99999}
           >
             <WithListContext render={MakeComputeGraphUser} />
@@ -139,7 +147,6 @@ export const UserPage = () => {
             <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
               <FunctionField
                 label="Project"
-                //render={LinkToGroup}
                 render={(record) => LinkToGroupWithPrefix(record.project)}
                 sortBy="project"
                 source="project"
@@ -154,6 +161,16 @@ export const UserPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/scratch" path="scratch">
+        <ReferenceManyField
+            label="/scratch usage over time"
+            target="user"
+            reference="storage"
+            sort={{ field: "ts", order: "ASC" }}
+            filter={{ fs:"scratch", ...storageFilter }}
+            perPage={99999}
+          >
+          <WithListContext render={MakeStorageGraphUser} />
+          </ReferenceManyField>
           <ReferenceManyField
             label="/scratch usage across all projects"
             target="user"
@@ -190,6 +207,16 @@ export const UserPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/g/data" path="gdata">
+        <ReferenceManyField
+            label="/g/data usage over time"
+            target="user"
+            reference="storage"
+            sort={{ field: "ts", order: "ASC" }}
+            filter={{ fs:"gdata", ...storageFilter }}
+            perPage={99999}
+          >
+          <WithListContext render={MakeStorageGraphUser} />
+          </ReferenceManyField>
           <ReferenceManyField
             label="/g/data usage across all projects"
             target="user"
