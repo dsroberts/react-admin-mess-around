@@ -12,7 +12,6 @@ import {
   WithListContext,
   TabbedShowLayout,
   SimpleShowLayout,
-  SelectInput,
 } from "react-admin";
 
 import React, { useState } from "react";
@@ -27,6 +26,9 @@ import "dayjs/locale/en-au";
 import { formatSU } from "../../util/formatting/formatSU";
 
 import Chip from "@mui/material/Chip";
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+
 import { formatStorage } from "../../util/formatting/formatStorage";
 import { MakeComputeGraphUser, MakeStorageGraphUser, DateFilterContext } from "../../util/plotting/computePlot";
 import { LinkToGroupWithPrefix } from "../../util/linking";
@@ -64,6 +66,8 @@ export const UserPage = () => {
   const [projects, setProjectList] = useState([]);
   const [ fromDate, setFromDate ] = useState(dayjs().subtract(14,'day') );
   const [ toDate, setToDate ] = useState(dayjs());
+  const [ alignment, setAlignment ] = useState('size')
+
   const datefilter = fromDate && toDate ? { ts: [fromDate.toISOString(), toDate.toISOString()] } : {};
 
   const PostBulkActionButtons = () => {
@@ -91,7 +95,13 @@ export const UserPage = () => {
     );
   };
 
-  
+  const handleStorageTypeChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newAlignment: string,
+  ) => {
+    setAlignment(newAlignment);
+  };
+
   const projectFilter = projects.length != 0 ? { project: projects } : {};
   const locationFilter = projects.length != 0 ? { location: projects } : {};
   const computeFilter = { ...projectFilter, ...datefilter };
@@ -106,7 +116,7 @@ export const UserPage = () => {
         </TopToolbar>
       }
     >
-      <DateFilterContext.Provider value={{ fromDate: fromDate, toDate: toDate }}>
+      <DateFilterContext.Provider value={{ fromDate: fromDate, toDate: toDate, storageType: alignment }}>
       <SimpleShowLayout>
         <TextField source="id" label="Username" />
         <TextField source="pw_name" label="Name" />
@@ -161,6 +171,16 @@ export const UserPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/scratch" path="scratch">
+          <ToggleButtonGroup
+            color="primary"
+            value={alignment}
+            exclusive
+            onChange={handleStorageTypeChange}
+            aria-label="Type"
+          >
+            <ToggleButton value="size">Storage Capacity</ToggleButton>
+            <ToggleButton value="inodes">File Counts</ToggleButton>
+          </ToggleButtonGroup>
         <ReferenceManyField
             label="/scratch usage over time"
             target="user"
@@ -207,6 +227,16 @@ export const UserPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/g/data" path="gdata">
+        <ToggleButtonGroup
+            color="primary"
+            value={alignment}
+            exclusive
+            onChange={handleStorageTypeChange}
+            aria-label="Type"
+          >
+            <ToggleButton value="size">Storage Capacity</ToggleButton>
+            <ToggleButton value="inodes">File Counts</ToggleButton>
+          </ToggleButtonGroup>
         <ReferenceManyField
             label="/g/data usage over time"
             target="user"

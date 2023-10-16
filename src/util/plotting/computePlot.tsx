@@ -181,14 +181,14 @@ function MakeStorageGraphUser() {
 
   const listContext = useListContext();
   if (listContext.isLoading) return null;
-  const { fromDate, toDate } = useContext(DateFilterContext);
-  const { dataArray, proplist: projectlist } = PreparePlotData('location','size',listContext.data,"prev",6)
+  const { fromDate, toDate, storageType } = useContext(DateFilterContext);
+  const { dataArray, proplist: projectlist } = PreparePlotData('location',storageType,listContext.data,"prev",6)
 
   return (
     <ResponsiveContainer width="100%" height={400}>
       <AreaChart data={dataArray}>
         <XAxis dataKey="ts" type='number' tickFormatter={(x) => dayjs.unix(x).format('YYYY-MM-DD')} domain={[fromDate.unix(),toDate.unix()]}/>
-        <YAxis type="number" tickFormatter={formatStorage} />
+        <YAxis type="number" tickFormatter={(x) => { if ( storageType == "size" ) { return formatStorage(x) } else { return x.toLocaleString()} }} />
         <Tooltip />
         <Legend />
         <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
@@ -210,16 +210,16 @@ function MakeStorageGraphUser() {
 
 function MakeStorageGraphProj() {
 
-const { fromDate, toDate } = useContext(DateFilterContext);
+const { fromDate, toDate, storageType } = useContext(DateFilterContext);
 const listContext = useListContext();
 if (listContext.isLoading) return null;
-const { dataArray, proplist: userlist } = PreparePlotData('user','size',listContext.data,"prev",6)
+const { dataArray, proplist: userlist } = PreparePlotData('user',storageType,listContext.data,"prev",6)
 
 return (
   <ResponsiveContainer width="100%" height={400}>
     <AreaChart data={dataArray}>
       <XAxis dataKey="ts" type='number' tickFormatter={(x) => dayjs.unix(x).format('YYYY-MM-DD')} domain={[fromDate.unix(),toDate.unix()]}/>
-      <YAxis type="number" tickFormatter={formatStorage} />
+      <YAxis type="number"  tickFormatter={(x) => { if ( storageType == "size" ) { return formatStorage(x) } else { return x.toLocaleString()} }}  />
       <Tooltip label={(x) => dayjs.unix(x).format('YYYY-MM-DD HH:mm:ss')}/>
       <Legend />
       <CartesianGrid stroke="#eee" strokeDasharray="5 5" />

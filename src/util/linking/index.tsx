@@ -4,11 +4,11 @@ import { managedProjects, specialUsers } from "../data/groups";
 
 const LinkToUserWithPrefix = (name: string, prefix?: string, linkSuffix?: string) => {
     var topath = "show";
-    if ( specialUsers.includes(name) ) {
+    if ( name in specialUsers ) {
         if ( prefix ) {
-            return prefix + "/" + name;
+            return prefix + "/" + specialUsers[name];
         } else {
-            return name;
+            return specialUsers[name];
         }
     }
     if ( linkSuffix ) {

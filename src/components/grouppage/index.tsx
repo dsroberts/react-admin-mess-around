@@ -19,10 +19,11 @@ import React, { useState } from "react";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import dayjs from "dayjs";
 import "dayjs/locale/en-au";
-
 
 import { formatSU } from "../../util/formatting/formatSU";
 import { formatStorage } from "../../util/formatting/formatStorage";
@@ -54,6 +55,8 @@ export const GroupPage = () => {
   const [users, setUserList] = useState([]);
   const [ fromDate, setFromDate ] = useState(dayjs().subtract(14,'day') );
   const [ toDate, setToDate ] = useState(dayjs());
+  const [ alignment, setAlignment ] = useState('size')
+
   const datefilter = fromDate && toDate ? {ts: [fromDate.toISOString(), toDate.toISOString()] } : {};
 
   const PostBulkActionButtons = () => {
@@ -81,6 +84,14 @@ export const GroupPage = () => {
     );
   };
 
+  const handleStorageTypeChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newAlignment: string,
+  ) => {
+    setAlignment(newAlignment);
+  };
+
+
   const userFilter = users.length != 0 ? { user: users } : {};
   const totalFilter = { ...userFilter, ...datefilter };
 
@@ -93,7 +104,7 @@ export const GroupPage = () => {
         </TopToolbar>
       }
     >
-      <DateFilterContext.Provider value={{ fromDate: fromDate, toDate: toDate }}>
+      <DateFilterContext.Provider value={{ fromDate: fromDate, toDate: toDate, storageType: alignment }}>
       <SimpleShowLayout>
         <TextField source="id" label="Group Name" />
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-au">
@@ -147,6 +158,16 @@ export const GroupPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/scratch" path="scratch">
+        <ToggleButtonGroup
+            color="primary"
+            value={alignment}
+            exclusive
+            onChange={handleStorageTypeChange}
+            aria-label="Type"
+          >
+            <ToggleButton value="size">Storage Capacity</ToggleButton>
+            <ToggleButton value="inodes">File Counts</ToggleButton>
+          </ToggleButtonGroup>
           <ReferenceManyField
             label="/scratch usage over time"
             target="location"
@@ -201,6 +222,16 @@ export const GroupPage = () => {
           </ReferenceManyField>
         </TabbedShowLayout.Tab>
         <TabbedShowLayout.Tab label="/g/data" path="gdata">
+        <ToggleButtonGroup
+            color="primary"
+            value={alignment}
+            exclusive
+            onChange={handleStorageTypeChange}
+            aria-label="Type"
+          >
+            <ToggleButton value="size">Storage Capacity</ToggleButton>
+            <ToggleButton value="inodes">File Counts</ToggleButton>
+          </ToggleButtonGroup>
         <ReferenceManyField
             label="/g/data usage over time"
             target={quotaField()}
