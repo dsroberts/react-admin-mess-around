@@ -304,6 +304,16 @@ export const GroupPage = () => {
             </ReferenceManyField>
           </TabbedShowLayout.Tab>
           <TabbedShowLayout.Tab label="massdata" path="massdata">
+            <ToggleButtonGroup
+              color="primary"
+              value={alignment}
+              exclusive
+              onChange={handleStorageTypeChange}
+              aria-label="Type"
+            >
+              <ToggleButton value="size">Storage Capacity</ToggleButton>
+              <ToggleButton value="inodes">File Counts</ToggleButton>
+            </ToggleButtonGroup>
             <ReferenceManyField
               label="massdata usage over time"
               target="location"
