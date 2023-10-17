@@ -4,7 +4,9 @@ import { UserList } from "./components/users";
 import { UserPage } from "./components/userpage";
 import { GroupList } from "./components/groups";
 import { GroupPage } from "./components/grouppage";
+import { MyLoginPage } from "./components/loginpage";
 import { QueryClient } from "react-query";
+import authProvider from "./auth"
 
 export const App = () => {
   const queryClient = new QueryClient({
@@ -15,7 +17,7 @@ export const App = () => {
     },
   });
   return (
-    <Admin dataProvider={dataProvider} queryClient={queryClient}>
+    <Admin dataProvider={dataProvider} queryClient={queryClient} loginPage={MyLoginPage} authProvider={authProvider} requireAuth>
       <Resource name="users" list={UserList} show={UserPage} />
       <Resource name="groups" list={GroupList} show={GroupPage} />
     </Admin>

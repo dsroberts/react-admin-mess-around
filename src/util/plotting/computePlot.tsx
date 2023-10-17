@@ -109,7 +109,7 @@ function PreparePlotData(
     dataArray.push(newobj);
   }
 
-  dataArray.sort((a, b) => a.ts - b.ts);
+  dataArray.sort((a, b) => a.id - b.id);
   return { dataArray, proplist };
 }
 
@@ -224,8 +224,6 @@ function MakeStorageGraphUser() {
     fromDate,
     toDate
   );
-
-  console.log(dataArray);
 
   return (
     <ResponsiveContainer width="100%" height={400}>
